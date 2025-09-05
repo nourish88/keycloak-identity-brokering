@@ -1,0 +1,80 @@
+version: "3.8"
+
+services:
+  # Keycloak-A (Kamunet - İç kullanıcılar)
+  keycloak-a:
+    image: quay.io/keycloak/keycloak:26.2.0
+    container_name: keycloak-a
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin123
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres-a:5432/keycloak_a
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: keycloak
+      KC_HOSTNAME_STRICT: false
+      KC_HOSTNAME_STRICT_HTTPS: false
+      KC_HTTP_ENABLED: true
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres-a
+    command: start-dev
+    networks:
+      - keycloak-network
+
+  # Keycloak-B (Vatandaş - Dış kullanıcılar)
+  keycloak-b:
+    image: quay.io/keycloak/keycloak:26.2.0
+    container_name: keycloak-b
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin123
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres-b:5432/keycloak_b
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: keycloak
+      KC_HOSTNAME_STRICT: false
+      KC_HOSTNAME_STRICT_HTTPS: false
+      KC_HTTP_ENABLED: true
+    ports:
+      - "8081:8080"
+    depends_on:
+      - postgres-b
+    command: start-dev
+    networks:
+      - keycloak-network
+
+  # PostgreSQL for Keycloak-A
+  postgres-a:
+    image: postgres:15
+    container_name: postgres-a
+    environment:
+      POSTGRES_DB: keycloak_a
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: keycloak
+    volumes:
+      - postgres_a_data:/var/lib/postgresql/data
+    networks:
+      - keycloak-network
+
+  # PostgreSQL for Keycloak-B
+  postgres-b:
+    image: postgres:15
+    container_name: postgres-b
+    environment:
+      POSTGRES_DB: keycloak_b
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: keycloak
+    volumes:
+      - postgres_b_data:/var/lib/postgresql/data
+    networks:
+      - keycloak-network
+
+volumes:
+  postgres_a_data:
+  postgres_b_data:
+
+networks:
+  keycloak-network:
+    driver: bridge
